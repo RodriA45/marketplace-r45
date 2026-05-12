@@ -11,6 +11,7 @@ env/
 backend/.env
 *.env.local
 .env.*
+!.env.example
 
 # Archivos privados y notas personales
 README-Personal.md
