@@ -146,4 +146,3 @@ Base ARS = precio USD × dólar blue
 4. Railway detecta el `Procfile` en `backend/api/` automáticamente
 
 ---
-*Para notas de desarrollo interno, ver `README-Personal.md`.*
