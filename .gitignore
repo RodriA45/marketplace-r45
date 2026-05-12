@@ -1,0 +1,29 @@
+# Entornos virtuales y Caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Variables de entorno y Secretos (¡CRÍTICO!)
+.env
+backend/.env
+*.env.local
+.env.*
+
+# Archivos privados y notas personales
+README-Personal.md
+
+# Archivos del Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# Configuraciones de Editores de Código (IDEs)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketplace R45 — Arbitraje Inteligente</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="shortcut icon" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">Marketplace <span>R45</span></div>
+    <div class="status-pill"><span class="dot"></span>En vivo</div>
+  </div>
+  <div class="header-right">
+    <button class="btn-alert-config" onclick="openAlertModal()">🔔 Configurar alertas</button>
+    <button class="btn-alert-config" id="authBtn" onclick="openAuthModal()" style="background:var(--card);border:1px solid var(--border)">👤 Ingresar</button>
+    <div class="timer-chip">Actualizado hace <span id="updated">0</span>s</div>
+  </div>
+</header>
+
+<!-- DOLAR BAR -->
+<div class="dolar-bar" id="dolarBar">
+  <span class="dolar-loading">⏳ Obteniendo cotizaciones...</span>
+</div>
+
+<!-- ML BANNER -->
+<div class="ml-banner" id="mlBanner">
+  <div class="ml-banner-inner">
+    <span class="ml-icon">🛒</span>
+    <div>
+      <div class="ml-title">MercadoLibre conectado</div>
+      <div class="ml-sub">Precios en tiempo real desde la API oficial</div>
+    </div>
+    <div class="ml-status" id="mlStatus">
+      <span class="ml-dot"></span> Sincronizando...
+    </div>
+  </div>
+</div>
+
+<!-- FILTROS -->
+<div class="filters" id="filters">
+  <button class="filter-btn active" data-cat="all">Todos</button>
+  <button class="filter-btn" data-cat="Electrónica">📱 Electrónica</button>
+  <button class="filter-btn" data-cat="Moda">👗 Moda</button>
+  <button class="filter-btn" data-cat="Hogar">🏠 Hogar</button>
+  <button class="filter-btn" data-cat="Deportes">⚽ Deportes</button>
+  <button class="filter-btn" data-cat="Belleza">💄 Belleza</button>
+  <button class="filter-btn" data-cat="Juguetes">🎮 Juguetes</button>
+  <button class="filter-btn" data-cat="Mascotas">🐾 Mascotas</button>
+</div>
+
+<!-- TIENDAS + PROMPT IA -->
+<div class="stores-bar" id="storesBar">
+  <div class="stores-left">
+    <span class="stores-label">🏪 Tiendas:</span>
+    <button class="store-btn active" data-store="MercadoLibre" onclick="toggleStore('MercadoLibre')">
+      🛒 MercadoLibre
+    </button>
+    <button class="store-btn" data-store="AliExpress" onclick="toggleStore('AliExpress')">
+      <img src="https://logo.clearbit.com/aliexpress.com" onerror="this.style.display='none'" width="16" height="16"> AliExpress
+    </button>
+    <button class="store-btn" data-store="Temu" onclick="toggleStore('Temu')">
+      <img src="https://logo.clearbit.com/temu.com" onerror="this.style.display='none'" width="16" height="16"> Temu
+    </button>
+    <button class="store-btn" data-store="Amazon" onclick="toggleStore('Amazon')">
+      <img src="https://logo.clearbit.com/amazon.com" onerror="this.style.display='none'" width="16" height="16"> Amazon
+    </button>
+    <button class="store-btn" data-store="Shein" onclick="toggleStore('Shein')">
+      <img src="https://logo.clearbit.com/shein.com" onerror="this.style.display='none'" width="16" height="16"> Shein
+    </button>
+    <button class="store-btn" data-store="Alibaba" onclick="toggleStore('Alibaba')">
+      <img src="https://logo.clearbit.com/alibaba.com" onerror="this.style.display='none'" width="16" height="16"> Alibaba
+    </button>
+  </div>
+  <div class="prompt-section">
+    <input type="text" id="customPromptInput" class="prompt-input" placeholder="💡 Pedile algo a la IA: ej. 'productos para madres' o 'tecnología bajo $20'" maxlength="200">
+    <button class="btn-prompt-apply" onclick="applyCustomPrompt()">→</button>
+    <button class="btn-prompt-clear" onclick="clearCustomPrompt()" title="Limpiar">✕</button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-val" id="s-total" style="color:var(--accent)">—</div><div class="stat-lbl">Productos</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-val" id="s-avg" style="color:var(--green)">—</div><div class="stat-lbl">Margen neto prom.</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-val" id="s-best" style="color:var(--yellow)">—</div><div class="stat-lbl">Mejor oportunidad</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-val" id="s-dolar" style="color:var(--blue)">—</div><div class="stat-lbl">Dólar blue</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-val" id="s-alerts" style="color:var(--accent2)">0</div><div class="stat-lbl">Alertas activas</div></div>
+</div>
+
+<!-- GRID DE PRODUCTOS -->
+<main class="grid" id="grid">
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <div class="loading-text">Buscando productos trending...</div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-content">
+    <p>Hecho por <a href="https://www.linkedin.com/in/rodrigo-antunez-9523a6380" target="_blank" rel="noopener noreferrer">Rodrigo Antunez</a></p>
+  </div>
+</footer>
+
+<!-- ═══ MODAL PRODUCTO ═══ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="btn-close" onclick="closeModal()">✕</button>
+    <div class="modal-img" id="m-img"></div>
+    <div class="modal-body">
+
+      <div class="modal-header-row">
+        <div>
+          <div class="modal-cat" id="m-cat"></div>
+          <div class="modal-name" id="m-name"></div>
+          <div class="modal-seller" id="m-seller"></div>
+        </div>
+        <div class="modal-rating" id="m-rating"></div>
+      </div>
+
+      <div class="modal-desc" id="m-desc"></div>
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab active" data-tab="calc">💰 Calculadora</button>
+        <button class="tab" data-tab="hist">📈 Historial</button>
+        <button class="tab" data-tab="ml">🛒 MercadoLibre</button>
+      </div>
+
+      <!-- TAB: CALCULADORA -->
+      <div class="tab-panel active" id="tab-calc">
+        <div class="tipo-selector" id="tipoSelector">
+          <span class="tipo-label">Tipo de cambio:</span>
+          <button class="tipo-btn active" data-tipo="blue">💵 Blue</button>
+          <button class="tipo-btn" data-tipo="oficial">🏦 Oficial</button>
+          <button class="tipo-btn" data-tipo="mep">📊 MEP</button>
+          <button class="tipo-btn" data-tipo="ccl">🌐 CCL</button>
+          <button class="tipo-btn" data-tipo="tarjeta">💳 Tarjeta</button>
+        </div>
+        <div class="calc-summary" id="m-prices"></div>
+        <div class="desglose" id="m-desglose"></div>
+        <div class="ganancia-box" id="m-ganancia"></div>
+      </div>
+
+      <!-- TAB: HISTORIAL -->
+      <div class="tab-panel" id="tab-hist">
+        <div class="hist-header">
+          <span class="hist-title">Evolución del precio — últimos 30 días</span>
+          <span class="hist-source">Fuente: MercadoLibre API</span>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="priceChart"></canvas>
+        </div>
+        <div class="hist-stats" id="histStats"></div>
+      </div>
+
+      <!-- TAB: MERCADOLIBRE -->
+      <div class="tab-panel" id="tab-ml">
+        <div class="ml-results" id="mlResults">
+          <div class="loading-inline"><div class="spinner-sm"></div> Buscando en MercadoLibre...</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <div id="m-buy-container" style="display:flex; gap:0.5rem; flex-direction:column; width:100%">
+          <button class="btn-full btn-buy" id="m-buy-btn">🛒 Ir al proveedor</button>
+        </div>
+        <button class="btn-full btn-alert" onclick="createAlertFromProduct()">🔔 Crear alerta</button>
+        <button class="btn-full btn-save" onclick="addWishlist()">📌 Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL ALERTAS ═══ -->
+<div class="modal-overlay" id="alertModal">
+  <div class="modal modal-sm">
+    <button class="btn-close" onclick="closeAlertModal()">✕</button>
+    <div class="modal-body" style="padding-top:1.5rem">
+      <div class="alert-modal-title">🔔 Sistema de Alertas</div>
+      <div class="alert-modal-sub">Recibí un email cuando aparezca un producto con el margen que definís</div>
+
+      <div class="form-group">
+        <label class="form-label">Tu email</label>
+        <input type="email" id="alertEmail" class="form-input" placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Margen mínimo para alertar</label>
+        <div class="range-row">
+          <input type="range" id="alertMargin" min="10" max="200" value="50" oninput="document.getElementById('marginDisplay').textContent=this.value+'%'">
+          <span class="range-val" id="marginDisplay">50%</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categorías a monitorear</label>
+        <div class="cats-check" id="catsCheck"></div>
+      </div>
+
+      <div class="alert-note">
+        ⚠️ Para enviar emails reales necesitás conectar EmailJS o un backend propio.<br>
+        Por ahora las alertas se guardan localmente y aparecen en pantalla.
+      </div>
+
+      <div class="saved-alerts" id="savedAlerts"></div>
+
+      <button class="btn-full btn-buy" style="margin-top:1rem" onclick="saveAlert()">Guardar alerta</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAB BOTONES -->
+<div class="fab-group">
+  <button class="fab fab-wish" onclick="showWishlist()" title="Guardados">
+    📌 <span class="fab-count" id="wl-count">0</span>
+  </button>
+  <button class="fab fab-refresh" onclick="refreshAll()" title="Actualizar">↺</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modal de Login/Registro -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-box" style="max-width:380px">
+    <button class="btn-close" onclick="closeAuthModal()">✕</button>
+    <div style="display:flex;gap:1rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:1rem">
+      <button class="tab active" id="tabLogin" onclick="switchAuthTab('login')">Iniciar sesión</button>
+      <button class="tab" id="tabRegister" onclick="switchAuthTab('register')">Registrarse</button>
+    </div>
+    <div id="authError" style="color:var(--red);font-size:.85rem;margin-bottom:1rem;display:none;padding:.6rem;background:rgba(255,80,80,.1);border-radius:6px"></div>
+    <input type="email" id="authEmail" placeholder="tu@email.com"
+      style="width:100%;padding:.7rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--fg);margin-bottom:.8rem;box-sizing:border-box;font-size:.95rem">
+    <input type="password" id="authPassword" placeholder="Contraseña (mínimo 6 caracteres)"
+      style="width:100%;padding:.7rem 1rem;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--fg);margin-bottom:1.2rem;box-sizing:border-box;font-size:.95rem">
+    <button id="authSubmitBtn" onclick="submitAuth()"
+      style="width:100%;padding:.85rem;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem">
+      Iniciar sesión
+    </button>
+    <p style="text-align:center;margin-top:1rem;font-size:.8rem;color:var(--muted)">
+      Tu cuenta guarda alertas y productos favoritos de forma segura.
+    </p>
+  </div>
+</div>
+
+<script src="ml-api.js?v=3"></script>
+<script src="alerts.js?v=3"></script>
+<script src="auth.js?v=1"></script>
+<script src="app.js?v=3"></script>
+<script src="chart-history.js?v=3"></script>
+</body>
+</html>
