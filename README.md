@@ -11,7 +11,7 @@ Para tiendas de importación (AliExpress, Temu, Shein, etc.) usa IA (Gemini con 
 **Funcionalidades:**
 - Productos reales de MercadoLibre ordenados por ventas — actualizados en cada carga
 - Cálculo de margen real: precio ML + comisión 13% + envío 5% vs precio de reventa sugerido
-- Para importación: desglose completo de imp. PAIS 30%, IVA 21%, percepciones AFIP
+- Para importación: desglose impositivo actualizado a 2026 (Imp. PAIS derogado, IVA 21%, percepciones AFIP)
 - Cotizaciones en tiempo real — Blue, Oficial, MEP, CCL, Tarjeta
 - IA por tienda — AliExpress, Temu, Amazon, Shein, Alibaba con prompts personalizados
 - Sistema de usuarios — registro/login, wishlist persistente, alertas por email ligadas a tu cuenta
@@ -74,6 +74,10 @@ SUPABASE_SERVICE_KEY=eyJhbG...
 # Emails
 RESEND_API_KEY=re_xxxxx
 FROM_EMAIL=onboarding@resend.dev
+
+# Afiliados (Opcional) — para monetizar sugerencias de IA
+ALIEXPRESS_TAG=tu_codigo_aliexpress
+AMAZON_TAG=tu_codigo_amazon-20
 ```
 
 > La key de Gemini debe tener las restricciones de host desactivadas en Google AI Studio para funcionar desde Railway.
@@ -131,7 +135,6 @@ Margen = (reventa - costo) / costo × 100
 **Productos de importación (AliExpress, etc.):**
 ```
 Base ARS = precio USD × dólar blue
-+ Imp. PAIS 30%
 + IVA 21% + Percepción IVA AFIP 21%
 + Percepción Ganancias 30%
 + Envío internacional 12%

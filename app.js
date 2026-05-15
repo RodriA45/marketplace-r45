@@ -29,7 +29,7 @@ const TAX = {
   iva:         0.21,
   percIva:     0.21,
   percGan:     0.30,
-  impPais:     0.30,
+  impPais:     0.00, // Derogado en dic 2024
   comisionML:  0.13,
   envioExt:    0.12,
   envioLocal:  0.05,
@@ -139,7 +139,7 @@ function calcularCosto(priceUSD, vendorType) {
     const percGan  = sub1 * TAX.percGan;
     const envio    = Math.round(baseARS * TAX.envioExt);
 
-    desglose.push({ lbl: 'Impuesto PAIS 30%',          val: impPais,  color: 'var(--red)' });
+    desglose.push({ lbl: 'Impuesto PAIS (Derogado)',   val: impPais,  color: 'var(--muted)' });
     desglose.push({ lbl: 'IVA 21%',                    val: iva,      color: 'var(--red)' });
     desglose.push({ lbl: 'Percepción IVA AFIP 21%',    val: percIva,  color: 'var(--red)' });
     desglose.push({ lbl: 'Percepción Ganancias 30%',   val: percGan,  color: 'var(--yellow)', note: '*recuperable' });

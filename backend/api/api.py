@@ -91,7 +91,7 @@ def get_sb() -> Client:
 
 # ── IMPUESTOS ─────────────────────────────────────────────────
 TAX = {
-    "imp_pais":    0.30,
+    "imp_pais":    0.00,  # Derogado en dic 2024
     "iva":         0.21,
     "perc_iva":    0.21,
     "perc_gan":    0.30,
@@ -143,7 +143,7 @@ async def get_dolar_cached() -> dict:
                     "oficial": oficial,
                     "mep":     raw.get("bolsa",           1250),
                     "ccl":     raw.get("contadoconliqui", 1280),
-                    "tarjeta": round(oficial * 1.30 * 1.21, 2),  # oficial + 30% PAIS + 21% IVA
+                    "tarjeta": raw.get("tarjeta", round(oficial * 1.60, 2)),  # Usa API o estima 60% recargo
                 }
                 _dolar_cache["data"]       = data
                 _dolar_cache["updated_at"] = now
@@ -151,7 +151,7 @@ async def get_dolar_cached() -> dict:
     except Exception:
         pass
 
-    return {"blue": 1490, "oficial": 1165, "mep": 1420, "ccl": 1450, "tarjeta": round(1165 * 1.30 * 1.21, 2)}
+    return {"blue": 1490, "oficial": 1165, "mep": 1420, "ccl": 1450, "tarjeta": round(1165 * 1.60, 2)}
 
 # ══════════════════════════════════════════════════════════════
 # ENDPOINTS
@@ -589,7 +589,7 @@ async def get_ai_products(
         text = None
         if GEMINI_API_KEY:
             try:
-                gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+                gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
                 async with httpx.AsyncClient(timeout=60) as http:
                     g_resp = await http.post(gemini_url, json={
                         "contents": [{"parts": [{"text": prompt}]}],
@@ -648,12 +648,17 @@ async def get_ai_products(
 
             p["vendor_type"] = "exterior"
 
+            # Tags de afiliados desde .env
+            tag_ali = os.getenv("ALIEXPRESS_TAG", "")
+            tag_amz = os.getenv("AMAZON_TAG", "")
+            
             # Generar SIEMPRE la búsqueda exacta para evitar errores 404 (enlaces falsos de IA)
             gemini_seller = p.get("seller", "AliExpress")
             seller_lower = gemini_seller.lower()
             
             if "amazon" in seller_lower:
                 gemini_seller_url = f"https://www.amazon.com/s?k={query_ali}"
+                if tag_amz: gemini_seller_url += f"&tag={tag_amz}"
             elif "temu" in seller_lower:
                 gemini_seller_url = f"https://www.temu.com/search_result.html?search_key={query_ali}"
             elif "shein" in seller_lower:
@@ -662,6 +667,7 @@ async def get_ai_products(
                 gemini_seller_url = f"https://www.alibaba.com/trade/search?SearchText={query_ali}"
             else: # Default AliExpress
                 gemini_seller_url = f"https://es.aliexpress.com/w/wholesale-{query_ali}.html?SortType=total_tranpro_desc"
+                if tag_ali: gemini_seller_url += f"&aff_trace_key={tag_ali}"
 
             p["seller"]     = gemini_seller
             p["seller_url"] = gemini_seller_url
@@ -696,7 +702,7 @@ async def get_ai_products(
     except Exception as e:
         import traceback
         err_detail = f"{type(e).__name__}: {e}\n{traceback.format_exc()}"
-        print(f"[Gemini ERROR] {err_detail}", flush=True)
+        print(f"[Gemini ERROR] {err_detail}".encode('ascii', 'replace').decode('ascii'), flush=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/image")
